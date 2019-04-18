@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr  9 17:39:08 2019
 
-@author: shiry10
-"""
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib import rcParams
