@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr  9 17:35:29 2019
-
-@author: shiry10
-"""
 
 import json
 import logging
@@ -22,11 +15,6 @@ import heapq
 import random
 
 
-
-
-
-
-
 class Miner:
     def mine_data(self,
                   file_name=None,
@@ -35,19 +23,7 @@ class Miner:
                   stop_at=None,
                   timeout=15,
                   save_every=1000):
-        """ Mine data using the official Opendota API. Keep requests at a decent rate (3/s).
-        For every request, a JSON containing 100 games is returned. The games are downloaded
-        in descending order of the match IDs.
-        Args:
-            file_name: the name of the file where the dataframe will be stored
-            first_match_id: lowest match ID to look at; currently set at the start of 7.06e
-            last_match_id: highest match ID to look at; currently start at the end of 7.06e
-            stop_at: when the dataframe contains stop_at games, the mining stops
-            timeout: in case Opendota does not respond, wait timeout seconds before retrying
-            save_every: save the dataframe every save_every entries
-        Returns:
-            dataframe with the mined games
-        """
+        
         global OPENDOTA_URL
         OPENDOTA_URL = "https://api.opendota.com/api/publicMatches?less_than_match_id="
         global REQUEST_TIMEOUT
@@ -127,8 +103,8 @@ class Miner:
                start_file = 0, 
                matches_per_file = 20000):
         """
-        从last_match_id开始，找小于last_match_id的比赛，每matches_per_file场存一个csv
-        first_match是以前操作过的最大的比赛id
+        starting from last_match_id, search matches whose id smaller than last_match_id, save into csv every matches_per_file matches
+        first_match is the upper bound match id
         """
         for i in range(start_file, start_file + file_count):
             print(i)
@@ -142,8 +118,8 @@ class Miner:
             
             
     def extract_target_mmr(self, high = 99999, low = 4000):
-        """从爬下来的csv中，提取mmr在[low, high]范围内的比赛，并存入target_mmr文件"""
-        # 新建一个空的target_mmr文件，建议每次新建覆盖已有数据，防止重复读取
+        """extract matches whose mmr in [low, high] from csv, save into target_mmr"""
+        # initialize empty target_mmr. cover exsisting data to avoid duplicating data. 
         target_mmr = pd.DataFrame(columns=['match_id',
                                          'radiant_win',
                                          'radiant_team', 
@@ -153,52 +129,45 @@ class Miner:
                                          'game_mode', 
                                          'lobby_type'])
         target_mmr.to_csv('target_mmr.csv')
-        # 提取满足条件的比赛存入target_mmr dataframe中
+        # save matches into target_mmr dataframe
         i = 0
         path = 'rawdata_' + str(i) + '.csv'
         while os.path.isfile(path):
             dataset_df = pd.read_csv(path)
-            dataset_df = dataset_df[(dataset_df.avg_mmr > low) & (dataset_df.avg_mmr < high)][['match_id', 
-                                                                                            'radiant_win', 
-                                                                                            'radiant_team', 
-                                                                                            'dire_team', 
-                                                                                            'avg_mmr', 
-                                                                                            'num_mmr', 
-                                                                                            'game_mode', 
-                                                                                            'lobby_type']]
+            dataset_df = dataset_df[(dataset_df.avg_mmr > low) & (dataset_df.avg_mmr < high)][['match_id', 'radiant_win', 'radiant_team', 'dire_team', 'avg_mmr', 'num_mmr', 'game_mode', 'lobby_type']]
             target_mmr = target_mmr.append(dataset_df)
             i += 1
             path = 'rawdata_' + str(i) + '.csv'
-        # 将target_mmr dataframe 存入target_mmr csv
+        # save target_mmr dataframe into target_mmr csv
         target_mmr.to_csv('target_mmr.csv')
         
         
     def formulate(self):
         """
-        将target_mmr的数据存成numpy array
+        convert target_mmr into numpy array
         """
-        # 先新建一个空的文件
+        # initialize new empty file
         draft_win = np.empty([])
         f = open('draft_win.txt','wb')  
         pickle.dump(draft_win,f)
         f.close()
-        # 将target_mmr中阵容和胜负信息提取出来
+        # read lineup and outcome from target_mmr
         target_mmr = pd.read_csv('target_mmr.csv')
         draft_win_df = target_mmr.loc[:, ['radiant_team', 'dire_team', 'radiant_win']]
-        # 将上述信息转为numpy array
-        # 天辉阵容
+        # convert into numpy array
+        # Radiant
         draft_win_df_r = pd.DataFrame(draft_win_df.radiant_team.str.split(',',4).tolist(), columns = ['r1','r2','r3','r4','r5'])
-        # 夜魇阵容
+        # Dire
         draft_win_df_d = pd.DataFrame(draft_win_df.dire_team.str.split(',',4).tolist(), columns = ['d1','d2','d3','d4','d5'])
-        # 胜负
+        # outcome
         draft_win_df_w = draft_win_df.radiant_win
-        # 合并阵容和胜负
+        # join
         draft_win_df = draft_win_df_r.join(draft_win_df_d).join(draft_win_df_w)
-        # 存入numpy array
+        # save into numpy array
         draft_win_np = draft_win_df.values
-        # 将str转为int
+        # str to int
         draft_win_np = draft_win_np.astype(np.int)
-        # 将天辉夜魇阵容分别排序（从小到大），以便之后对比
+        # sort lineup (hero id)
         draft_win_np[:, :5].sort()
         draft_win_np[:, 5:10].sort()
         print(draft_win_np.shape)
@@ -208,11 +177,11 @@ class Miner:
         augmented[:, 5:10] = draft_win_np[:, :5]
         augmented[:, -1] = 1 - draft_win_np[:, -1]
         draft_win_np_augmented = np.concatenate((draft_win_np, augmented), axis=0)
-        # 用pickle储存
+        # pickle
         f = open('draft_win.txt','wb')  
         pickle.dump(draft_win_np_augmented,f)
         f.close()
-        # 读取pickle储存的numpy array
+        # read pickle numpy array
         f = open('draft_win.txt','rb') 
         draft_win = pickle.load(f) 
         f.close()
