@@ -6,7 +6,8 @@ Miner.py : mine history data from Valve server
 preprocessing.py : preprocess data and extract useful information, which basically means win rate of every hero and between 2 heroes and balabala. 
 Predictor.py : predict outcome of the game given draft. 
 Bpsimulator.py : simulator picking process, build an environment where 2 players can draft against each other. 
-Pickers.py : built a human player interface and defined 3 robots to do drafting. 
+Pickers.py : built a human player interface and defined 3 robots to do drafting.
+
 Tools.py : some additional tools. 
 
 
