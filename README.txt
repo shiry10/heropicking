@@ -12,5 +12,6 @@ Tools.py : some additional tools.
 
 
 
-Necessary data has been added. Updated to 2019.03.20.
-Including win rate data and trained predictor.h5 and hero_id dictionary. 
+Necessary data has been added, including win rate data and trained predictor.h5 and hero_id dictionary.
+Updated to 2019.03.20.
+
