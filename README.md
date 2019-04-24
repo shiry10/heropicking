@@ -1,3 +1,5 @@
+## Introduction
+
 This is a DOTA 2 hero picking robot. 
 
 There are 6 basic modules in total, including Miner.py, preprocessing.py, predictor.py, pickers.py, bpsimulator.py, tools.py. 
