@@ -19,7 +19,7 @@ class bpsimulator:
         self.show_name = show_name
         
     
-    def simulate(self, max_sampling):
+    def simulate(self, max_sampling=200):
         avail = list(self.pool)
         picked = []
         for r in range(self.Round):

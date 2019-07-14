@@ -257,7 +257,7 @@ class Monte_Carlo_picker:
 
 class Human:
     """Human player"""
-    def __init__(self, side='Radiant', show_name=False, pool=set(list(range(1,24)) + list(range(25, 115)) + [119,120])):
+    def __init__(self, side='Radiant', show_name=True, pool=set(list(range(1,24)) + list(range(25, 115)) + [119,120])):
         self.pool = pool
         self.side = side
         self.show_name = show_name
